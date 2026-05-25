@@ -1,0 +1,35 @@
+# Eclipse-specific files
+.project
+.classpath
+.settings/
+.mvn/
+
+# Compiled Java files
+*.class
+
+# Maven build artifacts
+target/
+logs/
+
+
+# Log files
+*.log
+
+# WebDriver executables (if stored within the project)
+# Example: chromedriver.exe, geckodriver.exe
+# If these are managed through WebDriverManager or placed outside the project, this might not be needed.
+# drivers/
+# *.exe
+# *.driver
+src/test/resources/*.exe
+
+# ExtentReports
+src/test/resources/ExtentReports/
+
+# Screenshots
+src/test/resources/screenshots/
+
+# Test reports or temporary files
+test-output/
+surefire-reports/
+temp/
