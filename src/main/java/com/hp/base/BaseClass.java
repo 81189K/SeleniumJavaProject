@@ -91,6 +91,14 @@ public class BaseClass {
 	}
 
 	/***
+	 * Getter Method for Properties
+	 * @return Properties instance
+	 */
+	public static Properties getProp() {
+		return prop;
+	}
+
+	/***
 	 * Static wait for pause
 	 * @param seconds
 	 */
