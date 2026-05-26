@@ -5,6 +5,8 @@
 		<classes>
 			<class name="com.hp.test.BaseClassTest1" />
 			<class name="com.hp.test.BaseClassTest2" />
+			<class name="com.hp.test.LoginPageTest" />
+			<class name="com.hp.test.HomePageTest" />
 		</classes>
 	</test>
 </suite>
