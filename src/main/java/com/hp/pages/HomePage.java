@@ -4,6 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
 import com.hp.actiondriver.ActionDriver;
+import com.hp.base.BaseClass;
 
 public class HomePage {
     
@@ -11,7 +12,8 @@ public class HomePage {
 
     //Initialize ActionDriver by passing WebDriver instance
     public HomePage(WebDriver driver) {
-        this.actionDriver = new ActionDriver(driver);
+        // this.actionDriver = new ActionDriver(driver);
+        this.actionDriver = BaseClass.getActionDriver(); // Get the shared ActionDriver instance from BaseClass
     }
 
     //By locators for home page elements
