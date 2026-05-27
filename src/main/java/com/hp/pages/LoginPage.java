@@ -26,7 +26,7 @@ public class LoginPage {
     //Method to perform login action
     public void login(String username, String password) {
         actionDriver.enterText(usernameField, username);
-        actionDriver.enterText(passwordField, password);
+        actionDriver.enterText(passwordField, password, true); // mask password in logs
         actionDriver.click(loginButton);
     }
 
