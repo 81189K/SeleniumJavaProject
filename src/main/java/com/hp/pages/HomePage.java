@@ -1,7 +1,6 @@
 package com.hp.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 
 import com.hp.actiondriver.ActionDriver;
 import com.hp.base.BaseClass;
@@ -11,7 +10,7 @@ public class HomePage {
     private ActionDriver actionDriver;
 
     //Initialize ActionDriver by passing WebDriver instance
-    public HomePage(WebDriver driver) {
+    public HomePage() {
         // this.actionDriver = new ActionDriver(driver);
         this.actionDriver = BaseClass.getActionDriver(); // Get the shared ActionDriver instance from BaseClass
     }

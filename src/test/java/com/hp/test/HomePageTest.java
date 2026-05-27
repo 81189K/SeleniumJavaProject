@@ -15,8 +15,8 @@ public class HomePageTest extends BaseClass{
 
     @BeforeMethod
     public void setupPages() {
-        loginPage = new LoginPage(driver);
-        homePage = new HomePage(driver);
+        loginPage = new LoginPage();
+        homePage = new HomePage();
     }
 
     @Test

@@ -8,7 +8,7 @@ public class BaseClassTest2 extends BaseClass{
 	
 	@Test
 	public void verifyUrlTest() {
-		String url = driver.getCurrentUrl();
+		String url = getDriver().getCurrentUrl();
 		assert url.contains("login") : "Test Failed - URL does not contains login!!!";
 		System.out.println("Test Passed - URL contains login");
 	}

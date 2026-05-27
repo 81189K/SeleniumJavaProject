@@ -1,7 +1,6 @@
 package com.hp.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 
 import com.hp.actiondriver.ActionDriver;
 import com.hp.base.BaseClass;
@@ -11,7 +10,7 @@ public class LoginPage {
     private ActionDriver actionDriver;
 
     //Initialize ActionDriver by passing WebDriver instance
-    public LoginPage(WebDriver driver) {
+    public LoginPage() {
         // this.actionDriver = new ActionDriver(driver);
         //singleton pattern to ensure only one instance of ActionDriver is created and shared across all page classes. This way, we can avoid multiple instances of ActionDriver being created for each page class and instead have a single instance that is initialized once and shared across all page classes.
         this.actionDriver = BaseClass.getActionDriver(); // Get the shared ActionDriver instance from BaseClass
