@@ -1,5 +1,7 @@
 package com.hp.actiondriver;
 
+import static com.hp.base.BaseClass.getDriver;
+
 import java.time.Duration;
 
 import org.apache.logging.log4j.Logger;
@@ -7,7 +9,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -15,15 +16,19 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.hp.base.BaseClass;
 
 public class ActionDriver {
+
+	//NOTE: works perfectly fine when running tests sequentially (one after another), it completely breaks your framework the moment you enable parallel test execution
 	
-	private WebDriver driver;
+//	private WebDriver driver; // refer NOTE above for why we are not using this instance variable
 	private WebDriverWait wait;
 	public static final Logger logger = BaseClass.logger; // Use the same logger instance from BaseClass for logging
 	
-	public ActionDriver(WebDriver driver) {
-		this.driver = driver;
+	public ActionDriver(/*WebDriver driver*/) { // refer NOTE above for why we are not passing WebDriver instance in constructor
+		// this.driver = driver; // refer NOTE above for why we are not using this instance variable
+		// wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // refer NOTE above for why we are not initializing WebDriverWait here
+
 		int explicitWait = Integer.parseInt(BaseClass.getProp().getProperty("explicitWait"));
-		this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitWait));
+		this.wait = new WebDriverWait(getDriver(), Duration.ofSeconds(explicitWait)); // use getDriver() to access the WebDriver instance from BaseClass, ensures that the same WebDriver instance is used across all page classes and tests, and that ActionDriver is properly initialized with the WebDriver instance after it is set up in BaseClass.
 		logger.info("WebDriver instance initialized in ActionDriver");
 	}
 	
@@ -33,7 +38,7 @@ public class ActionDriver {
 		String elementDescription = getElementDescription(by);
 		try {
 			waitForElementToBeClickable(by);
-			driver.findElement(by).click();
+			getDriver().findElement(by).click();
 			logger.info("Clicked on " + elementDescription);
 		} catch (Exception e) {
 			logger.error("Unable to click element: "+ e.getMessage());
@@ -49,7 +54,7 @@ public class ActionDriver {
 	public void enterText(By by,String value,boolean maskInLogs) {
     try {
 		waitForElementToBeVisible(by);
-		WebElement inputFieldElement = driver.findElement(by);
+		WebElement inputFieldElement = getDriver().findElement(by);
 		inputFieldElement.clear();
 		inputFieldElement.sendKeys(value);
 		String maskedValue = maskInLogs ? "*".repeat(value.length()) : value;
@@ -63,7 +68,7 @@ public class ActionDriver {
 	public String getText(By by) {
 		try {
 			waitForElementToBeVisible(by);
-			return driver.findElement(by).getText();
+			return getDriver().findElement(by).getText();
 		} catch (Exception e) {
 			logger.error("Unable to get text: "+ e.getMessage());
 			return null;
@@ -85,7 +90,7 @@ public class ActionDriver {
 	public boolean isElementDisplayed(By by) {
 		try {
 			waitForElementToBeVisible(by);
-			boolean isDisplayed = driver.findElement(by).isDisplayed();
+			boolean isDisplayed = getDriver().findElement(by).isDisplayed();
 			logger.info(getElementDescription(by) + (isDisplayed?" is Displayed":" is NOT displayed"));
 			return isDisplayed;
 		} catch (Exception e) {
@@ -97,8 +102,8 @@ public class ActionDriver {
 	//Scroll to an element
 	public void scrollToElement(By by) {
 		try {
-			WebElement element = driver.findElement(by);
-			((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+			WebElement element = getDriver().findElement(by);
+			((JavascriptExecutor) getDriver()).executeScript("arguments[0].scrollIntoView(true);", element);
 		} catch (Exception e) {
 			logger.error("Unable to scroll to element: "+ e.getMessage());
 		}
@@ -106,14 +111,13 @@ public class ActionDriver {
 
 	//Wait for page to load completely
 	public void waitForPageToLoad() {
-    try {
-        wait.until(webDriver -> "complete".equals(
-            ((JavascriptExecutor) webDriver).executeScript("return document.readyState")
-        ));
-    } catch (Exception e) {
-        logger.error("Page did not load completely: " + e.getMessage());
-    }
-}
+		try {
+			wait.until(webDriver -> "complete".equals(
+					((JavascriptExecutor) webDriver).executeScript("return document.readyState")));
+		} catch (Exception e) {
+			logger.error("Page did not load completely: " + e.getMessage());
+		}
+	}
 	
 	//Wait for element to be clickable
 	public void waitForElementToBeClickable(By by) {
@@ -139,7 +143,7 @@ public class ActionDriver {
 		}
 
 		try {
-			WebElement element = driver.findElement(by);
+			WebElement element = getDriver().findElement(by);
 
 			String name = element.getDomAttribute("name");
 			if (isNotBlank(name))
