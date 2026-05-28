@@ -42,11 +42,11 @@ public class BaseClass {
 	
 	
 	@BeforeMethod
-	public synchronized void setup() throws IOException {
+	public void setup() throws IOException {
 		logger.info("Setting up WebDriver for: "+ this.getClass().getSimpleName());
 		launchBrowser();
 		configureBrowser();
-		staticWait(2);
+		// staticWait(2);
 		logger.info("WebDriver initialized and Browser maximized");
 
 		//Initialize actionDriver only once after WebDriver is initialized and configured
@@ -64,7 +64,7 @@ public class BaseClass {
 	/***
 	 * Initialize the WebDriver based on browser defined in config.properties file
 	 */
-	private synchronized void launchBrowser() {
+	private void launchBrowser() {
 		String browser = prop.getProperty("browser");
 		if(browser.equalsIgnoreCase("chrome")) {
 			// driver = new ChromeDriver();
@@ -102,11 +102,12 @@ public class BaseClass {
 			getDriver().get(prop.getProperty("url"));
 		} catch (Exception e) {
 			logger.error("Failed to navigate to the URL: " + e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when navigation action fails
 		}
 	}
 	
 	@AfterMethod
-	public synchronized void teardown() {
+	public void teardown() {
 		if(getDriver() != null) {
 			try {
 				getDriver().quit();
@@ -114,6 +115,7 @@ public class BaseClass {
 				actionDriver.remove(); // Remove the ActionDriver instance for the current thread from ThreadLocal to avoid memory leaks
 			} catch (Exception e) {
 				logger.error("Failed to quit the driver: " + e.getMessage());
+				throw e; // Rethrow the exception to ensure test fails when quit action fails
 			}
 		}
 		logger.info("Teardown completed for: "+ this.getClass().getSimpleName());
@@ -147,12 +149,12 @@ public class BaseClass {
 		return actionDriver.get(); // Return the ActionDriver instance for the current thread
 	}
 
-	/***
-	 * Static wait for pause
-	 * @param seconds
-	 */
-	public synchronized void staticWait(int seconds) {
-		logger.info("Performing static wait for {} seconds", seconds);
-		LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(seconds));
-	}
+	// /***
+	//  * Static wait for pause
+	//  * @param seconds
+	//  */
+	// public void staticWait(int seconds) {
+	// 	logger.info("Performing static wait for {} seconds", seconds);
+	// 	LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(seconds));
+	// }
 }

@@ -29,7 +29,7 @@ public class ActionDriver {
 
 		int explicitWait = Integer.parseInt(BaseClass.getProp().getProperty("explicitWait"));
 		this.wait = new WebDriverWait(getDriver(), Duration.ofSeconds(explicitWait)); // use getDriver() to access the WebDriver instance from BaseClass, ensures that the same WebDriver instance is used across all page classes and tests, and that ActionDriver is properly initialized with the WebDriver instance after it is set up in BaseClass.
-		logger.info("WebDriver instance initialized in ActionDriver");
+		// logger.info("WebDriver instance initialized in ActionDriver");  // refer NOTE
 	}
 	
 	
@@ -42,6 +42,11 @@ public class ActionDriver {
 			logger.info("Clicked on " + elementDescription);
 		} catch (Exception e) {
 			logger.error("Unable to click element: "+ e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when click action fails, refer NOTE above for why we are not swallowing exceptions in ActionDriver methods
+			// We are not swallowing exceptions in ActionDriver methods because if an action fails (like clicking an element), 
+			// we want the test to fail immediately and not proceed with further steps that are likely to fail as well. 
+			// By rethrowing the exception, we ensure that the failure is properly reported in the test results and logs, making it easier to identify and fix issues in the tests or application under test. 
+			// Swallowing exceptions in ActionDriver methods can lead to false positives (tests passing when they should fail) and make debugging more difficult.
 		}
 	}
 	
@@ -61,6 +66,7 @@ public class ActionDriver {
 		logger.info("Entered text '" + maskedValue + "' into " + getElementDescription(by));
     } catch (Exception e) {
 		logger.error("Unable to enter the value: "+ e.getMessage());
+		throw e; // Rethrow the exception to ensure test fails when enter text action fails
     }
 }	
 
@@ -71,7 +77,7 @@ public class ActionDriver {
 			return getDriver().findElement(by).getText();
 		} catch (Exception e) {
 			logger.error("Unable to get text: "+ e.getMessage());
-			return null;
+			throw e; // Rethrow the exception to ensure test fails when get text action fails
 		}
 	}
 
@@ -82,7 +88,7 @@ public class ActionDriver {
 			return actualText.equals(expectedValue);
 		} catch (Exception e) {
 			logger.error("Unable to compare text: "+ e.getMessage());
-			return false;
+			throw e; // Rethrow the exception to ensure test fails when compare text action fails
 		}
 	}
 
@@ -95,7 +101,7 @@ public class ActionDriver {
 			return isDisplayed;
 		} catch (Exception e) {
 			logger.error("Unable to check if element is displayed: "+ e.getMessage());
-			return false;
+			throw e; // Rethrow the exception to ensure test fails when check display action fails
 		}
 	}
 
@@ -106,6 +112,7 @@ public class ActionDriver {
 			((JavascriptExecutor) getDriver()).executeScript("arguments[0].scrollIntoView(true);", element);
 		} catch (Exception e) {
 			logger.error("Unable to scroll to element: "+ e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when scroll action fails
 		}
 	}
 
@@ -116,6 +123,7 @@ public class ActionDriver {
 					((JavascriptExecutor) webDriver).executeScript("return document.readyState")));
 		} catch (Exception e) {
 			logger.error("Page did not load completely: " + e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when page load action fails
 		}
 	}
 	
@@ -125,6 +133,7 @@ public class ActionDriver {
 			wait.until(ExpectedConditions.elementToBeClickable(by));
 		} catch (Exception e) {
 			logger.error("Element is not clickable: "+ e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when wait for clickable action fails
 		}
 	}
 	
@@ -134,12 +143,15 @@ public class ActionDriver {
 			wait.until(ExpectedConditions.visibilityOfElementLocated(by));
 		} catch (Exception e) {
 			logger.error("Element is not visible: "+ e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when wait for visible action fails
 		}
 	}
 
 	public String getElementDescription(By by) {
 		if (by == null) {
-			return "locator is null";
+			IllegalArgumentException e = new IllegalArgumentException("Locator cannot be null");
+			logger.error("Locator cannot be null: " + e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when locator is null
 		}
 
 		try {
@@ -171,8 +183,10 @@ public class ActionDriver {
 
 		} catch (NoSuchElementException | StaleElementReferenceException e) {
 			logger.error("Unable to locate element for description: " + e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when element is not found for description
 		} catch (Exception e) {
 			logger.error("Error while getting element description: " + e.getMessage());
+			throw e; // Rethrow the exception to ensure test fails when any unexpected error occurs while getting element description
 		}
 		return "Element located by: " + by.toString(); // Fallback to locator description if no attributes are available
 	}
