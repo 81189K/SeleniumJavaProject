@@ -64,6 +64,7 @@ public class LoginPageTest extends BaseClass {
     }
 
     @Test(testName = "Soft Assertion Test for Login Page UI Elements")
+    // @Test(retryAnalyzer = com.hp.utilities.RetryAnalyzer.class) // test-level retry analyzer for retrying failed tests
     public void testLoginPageUIElements() {
         ExtentManager.logStep("Verifying Login page UI elements using soft assertions"); // Log the verification step to the current test in the report
         // Get the SoftAssert instance for the current thread
