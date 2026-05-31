@@ -35,5 +35,6 @@ public class HomePage {
     public void logout() {
         actionDriver.click(userIDButton);
         actionDriver.click(logoutButton);
+        BaseClass.staticWait(1);
     }
 }   

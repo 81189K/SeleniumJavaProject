@@ -13,7 +13,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import com.aventstack.extentreports.Status;
 import com.hp.base.BaseClass;
 import com.hp.utilities.ExtentManager;
 
@@ -56,17 +55,19 @@ public class ActionDriver {
 	public void enterText(By by, String value, boolean maskInLogs) {
 		try {
 			waitForElementToBeVisible(by);
-			applyBorder(by, "blue");
+			String originalStyle = applyBorder(by, "blue");
 			WebElement inputFieldElement = getDriver().findElement(by);
 			inputFieldElement.clear();
 			inputFieldElement.sendKeys(value);
 			String maskedValue = maskInLogs ? "*".repeat(value.length()) : value;
 			logger.info("Entered text '" + maskedValue + "' into " + getElementDescription(by));
 			ExtentManager.logStep("Entered text '" + maskedValue + "' into " + getElementDescription(by));
+			removeBorder(by, originalStyle); // Remove the border after entering text
 		} catch (Exception e) {
-			applyBorder(by, "red");
+			String originalStyle = applyBorder(by, "red");
 			logger.error("Unable to enter text into " + getElementDescription(by) + ": " , e);
 			ExtentManager.logStepFailure("Unable to enter text into " + getElementDescription(by) + ": " + e);
+			removeBorder(by, originalStyle);
 			throw new RuntimeException("Unable to enter text into " + getElementDescription(by) + ": " + e.getMessage(), e); //ensure test fails when enter text action fails
 		}
 	}	
@@ -80,15 +81,17 @@ public class ActionDriver {
 	public String getText(By by) {
 		try {
 			waitForElementToBeVisible(by);
-			applyBorder(by, "blue");
+			String originalStyle = applyBorder(by, "blue");
 			String text = getDriver().findElement(by).getText();
-			logger.info("Retrieved text '" + text + "' from " + getElementDescription(by));
-			ExtentManager.logStep("Retrieved text '" + text + "' from " + getElementDescription(by));
+			// logger.info("Retrieved text '" + text + "' from " + getElementDescription(by));
+			// ExtentManager.logStep("Retrieved text '" + text + "' from " + getElementDescription(by));
+			removeBorder(by, originalStyle);
 			return text;
 		} catch (Exception e) {
-			applyBorder(by, "red");
+			String originalStyle = applyBorder(by, "red");
 			logger.error("Unable to get text from " + getElementDescription(by) + ": " , e);
 			ExtentManager.logStepFailure("Unable to get text from " + getElementDescription(by) + ": " + e);
+			removeBorder(by, originalStyle);
 			throw new RuntimeException("Unable to get text from " + getElementDescription(by) + ": " + e.getMessage(), e); //ensure test fails when get text action fails
 		}
 	}
@@ -98,19 +101,22 @@ public class ActionDriver {
 		try {
 			String actualText = getText(by);
 			if(actualText.equals(expectedValue)) {
-				applyBorder(by, "green");
+				String originalStyle = applyBorder(by, "green");
 				logger.info("Text comparison passed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
 				ExtentManager.logStepWithScreenshot("Text comparison passed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+				removeBorder(by, originalStyle);
 			} else {
-				applyBorder(by, "red");
+				String originalStyle = applyBorder(by, "red");
 				logger.error("Text comparison failed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
 				ExtentManager.logStepFailure("Text comparison failed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+				removeBorder(by, originalStyle);
 			}
 			return actualText.equals(expectedValue);
 		} catch (Exception e) {
-			applyBorder(by, "red");
+			String originalStyle = applyBorder(by, "red");
 			logger.error("Unable to compare text: "+ e.getMessage(), e);
 			ExtentManager.logStepFailure("Unable to compare text: " + e);
+			removeBorder(by, originalStyle);
 			throw new RuntimeException("Unable to compare text: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when compare text action fails
 		}
 	}
@@ -119,10 +125,11 @@ public class ActionDriver {
 	public boolean isElementDisplayed(By by) {
 		try {
 			waitForElementToBeVisible(by);
-			applyBorder(by, "blue");
+			String originalStyle = applyBorder(by, "blue");
 			boolean isDisplayed = getDriver().findElement(by).isDisplayed();
 			logger.info(getElementDescription(by) + (isDisplayed?" is Displayed":" is NOT displayed"));
 			ExtentManager.logStep(getElementDescription(by) + (isDisplayed?" is Displayed":" is NOT displayed"));
+			removeBorder(by, originalStyle);
 			return isDisplayed;
 		} catch (Exception e) {
 			logger.error("Unable to check if element is displayed: ", e);
@@ -136,9 +143,10 @@ public class ActionDriver {
 		try {
 			WebElement element = getDriver().findElement(by);
 			((JavascriptExecutor) getDriver()).executeScript("arguments[0].scrollIntoView(true);", element);
-			applyBorder(by, "blue");
+			String originalStyle = applyBorder(by, "blue");
 			logger.info("Scrolled to " + getElementDescription(by));
 			ExtentManager.logStep("Scrolled to " + getElementDescription(by));
+			removeBorder(by, originalStyle);
 		} catch (Exception e) {
 			logger.error("Unable to scroll to element: ", e);
 			ExtentManager.logStepFailure("Unable to scroll to element: " + e);
@@ -244,14 +252,34 @@ public class ActionDriver {
 	}
 	
 	//Utility Method to apply Border to an element (for debugging purposes)
-	private void applyBorder(By by, String color) {
+	private String applyBorder(By by, String color) {
 		try {
 			WebElement element = getDriver().findElement(by);
-			((JavascriptExecutor) getDriver()).executeScript("arguments[0].style.border='3px solid " + color + "'", element);
-			// logger.info("Applied " + color + " border to " + getElementDescription(by));
+			String originalStyle = element.getAttribute("style");
+			//apply border
+			((JavascriptExecutor) getDriver())
+					.executeScript(
+							"arguments[0].style.border=arguments[1]",
+							element,
+							"3px solid " + color);
+			//return original style
+			return originalStyle;
 		} catch (Exception e) {
-			logger.error("Unable to apply border to element: ", e);
-			ExtentManager.logStep(Status.WARNING, "Unable to apply border to element: " + e);
+			logger.warn("Unable to apply border to {}", getElementDescription(by), e);
+			return null;
+		}
+	}
+
+	private void removeBorder(By by, String originalStyle) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			((JavascriptExecutor) getDriver())
+					.executeScript(
+							"arguments[0].setAttribute('style', arguments[1])",
+							element,
+							originalStyle);
+		} catch (Exception e) {
+			logger.warn("Unable to remove border for {}", getElementDescription(by), e);
 		}
 	}
 

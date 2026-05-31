@@ -21,6 +21,8 @@ public class LoginPage {
     private By passwordField = By.cssSelector("input[name='password']");
     private By loginButton = By.xpath("//button[normalize-space()='Login']");
     private By errorMessage = By.xpath("//p[text()='Invalid credentials']");
+    private By usernameText = By.xpath("//p[contains(normalize-space(),'Username')]");
+    private By passwordText = By.xpath("//p[contains(normalize-space(),'Password')]");
     
     //Method to perform login action
     public void login(String username, String password) {
@@ -42,5 +44,15 @@ public class LoginPage {
     //Method to verify error message text    
     public boolean verifyErrorMessageText(String expectedErrorMessage) {
         return actionDriver.compareText(errorMessage, expectedErrorMessage);
+    }
+
+    //Method to verify username text    
+    public boolean verifyUsernameText(String expectedUsernameText) {
+        return actionDriver.compareText(usernameText, expectedUsernameText);
+    }
+
+    //Method to verify password text    
+    public boolean verifyPasswordText(String expectedPasswordText) {
+        return actionDriver.compareText(passwordText, expectedPasswordText);
     }
 }

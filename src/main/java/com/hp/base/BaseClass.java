@@ -4,8 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
-// import java.util.concurrent.TimeUnit;
-// import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
@@ -15,6 +15,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.asserts.SoftAssert;
 
 import com.hp.actiondriver.ActionDriver;
 import com.hp.utilities.ExtentManager;
@@ -28,6 +29,7 @@ public class BaseClass {
 	private static ThreadLocal<WebDriver> driver = new ThreadLocal<>(); // Use ThreadLocal to manage WebDriver instances for parallel execution
 	private static ThreadLocal<ActionDriver> actionDriver = new ThreadLocal<>(); // Use ThreadLocal to manage ActionDriver instances for parallel execution
 	public static final Logger logger = LoggerManager.getLogger(BaseClass.class); // Initialize Log4j logger for BaseClass
+	protected ThreadLocal<SoftAssert> softAssert = ThreadLocal.withInitial(SoftAssert::new); // Use ThreadLocal to manage SoftAssert instances for parallel execution
 
 	/***
 	 * load the configuration file
@@ -157,12 +159,20 @@ public class BaseClass {
 		return actionDriver.get(); // Return the ActionDriver instance for the current thread
 	}
 
-	// /***
-	//  * Static wait for pause
-	//  * @param seconds
-	//  */
-	// public void staticWait(int seconds) {
-	// 	logger.info("Performing static wait for {} seconds", seconds);
-	// 	LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(seconds));
-	// }
+	/***
+	 * Getter Method for SoftAssert to be used in test classes for assertions
+	 * @return SoftAssert instance
+	 */
+	public SoftAssert getSoftAssert() {
+		return softAssert.get(); // Return the SoftAssert instance for the current thread
+	}
+
+	/***
+	 * Static wait for pause
+	 * @param seconds
+	 */
+	public static void staticWait(int seconds) {
+		logger.info("Performing static wait for {} seconds", seconds);
+		LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(seconds));
+	}
 }
