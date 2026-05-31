@@ -1,6 +1,7 @@
 package com.hp.test;
 
 import com.hp.pages.LoginPage;
+import com.hp.utilities.DataProviderClass;
 import com.hp.utilities.ExtentManager;
 
 import org.testng.Assert;
@@ -33,11 +34,15 @@ public class LoginPageTest extends BaseClass {
         homePage.set(new HomePage());
     }
 
-    @Test
-    public void testValidLogin() {
+    @Test(dataProvider = "validLoginData", dataProviderClass = DataProviderClass.class)
+    public void testValidLogin(String username, String password) {
         // ExtentManager.startTest("testValidLogin"); // Start the Extent Report for this test method --handled in TestListener.onTestStart()
         ExtentManager.logStep("Performing login with valid credentials"); // Log the login step to the current test in the report
-        loginPage.get().login(prop.getProperty("username"), prop.getProperty("password"));
+        // login using credentials from config.properties file
+        // loginPage.get().login(prop.getProperty("username"), prop.getProperty("password"));
+
+        //login using credentials from data provider
+        loginPage.get().login(username, password);
         ExtentManager.logStep("Login action performed, verifying home page elements");
         Assert.assertTrue(homePage.get().isAdminTabVisible(), "Admin tab should be visible after valid login");
         Assert.assertTrue(homePage.get().isOrangeHRMLogoVisible(), "OrangeHRM logo should be visible after valid login");
@@ -47,11 +52,11 @@ public class LoginPageTest extends BaseClass {
         ExtentManager.logStep("Logout action performed successfully");
     }
 
-    @Test
-    public void testInvalidLogin() {
+    @Test(dataProvider = "inValidLoginData", dataProviderClass = DataProviderClass.class)
+    public void testInvalidLogin(String username, String password) {
         // ExtentManager.startTest("testValidLogin"); // Start the Extent Report for this test method --handled in TestListener.onTestStart()
         ExtentManager.logStep("Performing login with invalid credentials"); // Log the login step to the current test in the report
-        loginPage.get().login("invalidUser", "invalidPass");
+        loginPage.get().login(username, password);
         String expectedErrorMessage = "Invalid credentials";
         Assert.assertTrue(loginPage.get().isErrorMessageDisplayed(), "Error message should be displayed for invalid login");
         Assert.assertEquals(loginPage.get().getErrorMessageText(), expectedErrorMessage, " Expected Error message text should match expected value");

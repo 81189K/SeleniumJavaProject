@@ -35,6 +35,7 @@ public class HomePageTest extends BaseClass{
     @Test
     public void verifyHomePageElements() {
         ExtentManager.logStep("Performing login with valid credentials");
+        // login using credentials from config.properties file
         loginPage.get().login(prop.getProperty("username"), prop.getProperty("password"));
         ExtentManager.logStep("Login action performed, verifying home page elements");
         Assert.assertTrue(homePage.get().isAdminTabVisible(), "Admin tab should be visible after valid login");
