@@ -97,6 +97,15 @@ public class ActionDriver {
 	public boolean compareText(By by, String expectedValue) {
 		try {
 			String actualText = getText(by);
+			if(actualText.equals(expectedValue)) {
+				applyBorder(by, "green");
+				logger.info("Text comparison passed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+				ExtentManager.logStepWithScreenshot("Text comparison passed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+			} else {
+				applyBorder(by, "red");
+				logger.error("Text comparison failed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+				ExtentManager.logStepFailure("Text comparison failed for " + getElementDescription(by) + ": Expected = '" + expectedValue + "', Actual = '" + actualText + "'");
+			}
 			return actualText.equals(expectedValue);
 		} catch (Exception e) {
 			applyBorder(by, "red");

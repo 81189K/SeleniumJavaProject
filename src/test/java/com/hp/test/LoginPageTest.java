@@ -59,7 +59,7 @@ public class LoginPageTest extends BaseClass {
         loginPage.get().login(username, password);
         String expectedErrorMessage = "Invalid credentials";
         Assert.assertTrue(loginPage.get().isErrorMessageDisplayed(), "Error message should be displayed for invalid login");
-        Assert.assertEquals(loginPage.get().getErrorMessageText(), expectedErrorMessage, " Expected Error message text should match expected value");
+        Assert.assertTrue(loginPage.get().verifyErrorMessageText(expectedErrorMessage), "Test Failed: Invalid error message");
         ExtentManager.logStep("Invalid login error message verified successfully"); // Log the verification step to the current test in the report
     }
 
