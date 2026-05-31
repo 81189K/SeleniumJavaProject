@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.hp.base.BaseClass;
 import com.hp.pages.HomePage;
 import com.hp.pages.LoginPage;
+import com.hp.utilities.ExtentManager;
 
 public class HomePageTest extends BaseClass{
 
@@ -33,10 +34,15 @@ public class HomePageTest extends BaseClass{
 
     @Test
     public void verifyHomePageElements() {
+        ExtentManager.logStep("Performing login with valid credentials");
         loginPage.get().login(prop.getProperty("username"), prop.getProperty("password"));
+        ExtentManager.logStep("Login action performed, verifying home page elements");
         Assert.assertTrue(homePage.get().isAdminTabVisible(), "Admin tab should be visible after valid login");
         Assert.assertTrue(homePage.get().isOrangeHRMLogoVisible(), "OrangeHRM logo should be visible after valid login");
+        ExtentManager.logStepWithScreenshot("Home page elements verified successfully");
+        ExtentManager.logStep("Performing logout");
         homePage.get().logout();
+        ExtentManager.logStep("Logout action performed successfully");
     }
 
     @AfterMethod

@@ -1,6 +1,7 @@
 package com.hp.test;
 
 import com.hp.pages.LoginPage;
+import com.hp.utilities.ExtentManager;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -34,18 +35,27 @@ public class LoginPageTest extends BaseClass {
 
     @Test
     public void testValidLogin() {
+        // ExtentManager.startTest("testValidLogin"); // Start the Extent Report for this test method --handled in TestListener.onTestStart()
+        ExtentManager.logStep("Performing login with valid credentials"); // Log the login step to the current test in the report
         loginPage.get().login(prop.getProperty("username"), prop.getProperty("password"));
+        ExtentManager.logStep("Login action performed, verifying home page elements");
         Assert.assertTrue(homePage.get().isAdminTabVisible(), "Admin tab should be visible after valid login");
         Assert.assertTrue(homePage.get().isOrangeHRMLogoVisible(), "OrangeHRM logo should be visible after valid login");
+        ExtentManager.logStepWithScreenshot("Home page elements verified successfully");
+        ExtentManager.logStep("Performing logout");
         homePage.get().logout();
+        ExtentManager.logStep("Logout action performed successfully");
     }
 
     @Test
     public void testInvalidLogin() {
+        // ExtentManager.startTest("testValidLogin"); // Start the Extent Report for this test method --handled in TestListener.onTestStart()
+        ExtentManager.logStep("Performing login with invalid credentials"); // Log the login step to the current test in the report
         loginPage.get().login("invalidUser", "invalidPass");
         String expectedErrorMessage = "Invalid credentials";
         Assert.assertTrue(loginPage.get().isErrorMessageDisplayed(), "Error message should be displayed for invalid login");
         Assert.assertEquals(loginPage.get().getErrorMessageText(), expectedErrorMessage, " Expected Error message text should match expected value");
+        ExtentManager.logStep("Invalid login error message verified successfully"); // Log the verification step to the current test in the report
     }
 
     @AfterMethod

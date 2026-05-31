@@ -4,8 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
+// import java.util.concurrent.TimeUnit;
+// import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
@@ -17,6 +17,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.hp.actiondriver.ActionDriver;
+import com.hp.utilities.ExtentManager;
 import com.hp.utilities.LoggerManager;
 
 public class BaseClass {
@@ -27,6 +28,7 @@ public class BaseClass {
 	private static ThreadLocal<WebDriver> driver = new ThreadLocal<>(); // Use ThreadLocal to manage WebDriver instances for parallel execution
 	private static ThreadLocal<ActionDriver> actionDriver = new ThreadLocal<>(); // Use ThreadLocal to manage ActionDriver instances for parallel execution
 	public static final Logger logger = LoggerManager.getLogger(BaseClass.class); // Initialize Log4j logger for BaseClass
+
 	/***
 	 * load the configuration file
 	 */
@@ -36,29 +38,22 @@ public class BaseClass {
 		FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
 		prop.load(fis); //loads the file
 		logger.info("config.properties file loaded successfully");
-	}
-	
 
-	
+		//Start the Extent Report before any tests are run
+		// ExtentManager.getReporter(); // implemented in TestListner.onStart() to ensure that the report is initialized before any test starts, and that the same report instance is used across all tests.
+	}
 	
 	@BeforeMethod
 	public void setup() throws IOException {
-		logger.info("Setting up WebDriver for: "+ this.getClass().getSimpleName());
+		logger.info("Setting up WebDriver for: "+ this.getClass().getSimpleName() + " in thread {}: " + Thread.currentThread().threadId());
 		launchBrowser();
 		configureBrowser();
 		// staticWait(2);
-		logger.info("WebDriver initialized and Browser maximized");
+		// logger.info("WebDriver initialized and Browser maximized");
 
-		//Initialize actionDriver only once after WebDriver is initialized and configured
-		//Singleton pattern to ensure only one instance of ActionDriver is created and shared across all page classes. This way, we can avoid multiple instances of ActionDriver being created for each page class and instead have a single instance that is initialized once and shared across all page classes.
-		// if(actionDriver == null) {
-		// 	actionDriver = new ActionDriver(driver);
-		// 	logger.info("ActionDriver instance initialized in BaseClass setup method");
-		// }
-		if(getActionDriver() == null) {
-			actionDriver.set(new ActionDriver());
-			logger.info("ActionDriver instance initialized for thread: " + Thread.currentThread().getId());
-		}
+		//ActionDriver should be initialized after WebDriver is set up
+		actionDriver.set(new ActionDriver());
+		// logger.info("ActionDriver instance initialized for thread: " + Thread.currentThread().threadId());
 	}
 	
 	/***
@@ -69,14 +64,17 @@ public class BaseClass {
 		if(browser.equalsIgnoreCase("chrome")) {
 			// driver = new ChromeDriver();
 			driver.set(new ChromeDriver()); // Set the WebDriver instance for the current thread using ThreadLocal
+			ExtentManager.registerDriver(getDriver());
 			logger.info("ChromeDriver initialized");
 		} else if(browser.equalsIgnoreCase("firefox")) {
 			// driver = new FirefoxDriver();
 			driver.set(new FirefoxDriver());
+			ExtentManager.registerDriver(getDriver());
 			logger.info("FirefoxDriver initialized");
 		} else if(browser.equalsIgnoreCase("edge")) {
 			// driver = new EdgeDriver();
 			driver.set(new EdgeDriver()); 
+			ExtentManager.registerDriver(getDriver());
 			logger.info("EdgeDriver initialized");
 		} else {
 			throw new IllegalArgumentException("Browser not supported: "+ browser); //throw exception or make one browser as default.
@@ -98,11 +96,14 @@ public class BaseClass {
 		getDriver().manage().window().maximize();
 		
 		//Navigate to URL
+		String URL = prop.getProperty("url");
 		try {
-			getDriver().get(prop.getProperty("url"));
+			// logger.info("Navigating to URL: " + URL);
+			logger.info("Launching application");
+			getDriver().get(URL);
 		} catch (Exception e) {
-			logger.error("Failed to navigate to the URL: " + e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when navigation action fails
+			logger.error("Launching application in thread {}: " + Thread.currentThread().threadId() + " with error: " + e.getMessage());
+			throw new RuntimeException("Launching application in thread {}: " + Thread.currentThread().threadId() + " with error: " + e.getMessage(), e); //ensure test fails when navigation action fails
 		}
 	}
 	
@@ -111,18 +112,18 @@ public class BaseClass {
 		if(getDriver() != null) {
 			try {
 				getDriver().quit();
-				driver.remove(); // Remove the WebDriver instance for the current thread from ThreadLocal to avoid memory leaks
-				actionDriver.remove(); // Remove the ActionDriver instance for the current thread from ThreadLocal to avoid memory leaks
 			} catch (Exception e) {
 				logger.error("Failed to quit the driver: " + e.getMessage());
-				throw e; // Rethrow the exception to ensure test fails when quit action fails
+				throw new RuntimeException("Failed to quit the driver: " + e.getMessage(), e);
 			}
 		}
 		logger.info("Teardown completed for: "+ this.getClass().getSimpleName());
 		// driver = null; // Set driver to null after quitting to avoid stale reference issues in subsequent tests
 		// actionDriver = null; // Set actionDriver to null to ensure it will be re-initialized in the next test setup
-		// driver.remove(); // Remove the WebDriver instance for the current thread from ThreadLocal to avoid memory leaks
-		// actionDriver.remove(); // Remove the ActionDriver instance for the current thread from ThreadLocal to avoid memory leaks
+		driver.remove(); // Remove the WebDriver instance for the current thread from ThreadLocal to avoid memory leaks
+		actionDriver.remove(); // Remove the ActionDriver instance for the current thread from ThreadLocal to avoid memory leaks
+
+		// ExtentManager.endTest();  // handled in TestListener.onFinish()
 	}
 
 	/***
@@ -138,6 +139,10 @@ public class BaseClass {
 	 * @return WebDriver instance
 	 */
 	public static WebDriver getDriver() {
+		if (driver.get() == null) {
+			logger.error("WebDriver is not initialized");
+			throw new IllegalStateException("WebDriver is not initialized");
+		}
 		return driver.get(); // Return the WebDriver instance for the current thread
 	}
 
@@ -146,6 +151,9 @@ public class BaseClass {
 	 * @return ActionDriver instance
 	 */
 	public static ActionDriver getActionDriver() {
+		if (actionDriver.get() == null) {
+			throw new IllegalStateException("ActionDriver is not initialized"  + Thread.currentThread().threadId());
+		}
 		return actionDriver.get(); // Return the ActionDriver instance for the current thread
 	}
 

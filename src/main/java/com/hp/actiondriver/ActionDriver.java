@@ -14,6 +14,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.hp.base.BaseClass;
+import com.hp.utilities.ExtentManager;
 
 public class ActionDriver {
 
@@ -40,44 +41,48 @@ public class ActionDriver {
 			waitForElementToBeClickable(by);
 			getDriver().findElement(by).click();
 			logger.info("Clicked on " + elementDescription);
+			ExtentManager.logStep("Clicked on " + elementDescription); // Log the click action to the current test in the report with element description
 		} catch (Exception e) {
-			logger.error("Unable to click element: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when click action fails, refer NOTE above for why we are not swallowing exceptions in ActionDriver methods
-			// We are not swallowing exceptions in ActionDriver methods because if an action fails (like clicking an element), 
-			// we want the test to fail immediately and not proceed with further steps that are likely to fail as well. 
-			// By rethrowing the exception, we ensure that the failure is properly reported in the test results and logs, making it easier to identify and fix issues in the tests or application under test. 
-			// Swallowing exceptions in ActionDriver methods can lead to false positives (tests passing when they should fail) and make debugging more difficult.
+			logger.error("Unable to click on " + elementDescription + ": " , e);
+			ExtentManager.logStepFailure("Unable to click on " + elementDescription + ": " + e);
+			throw new RuntimeException("Unable to click on " + elementDescription + ": " + e.getMessage(), e); //ensure test fails when click action fails
 		}
 	}
-	
+
+	// Method to enter masked text into an input field
+	public void enterText(By by, String value, boolean maskInLogs) {
+		try {
+			waitForElementToBeVisible(by);
+			WebElement inputFieldElement = getDriver().findElement(by);
+			inputFieldElement.clear();
+			inputFieldElement.sendKeys(value);
+			String maskedValue = maskInLogs ? "*".repeat(value.length()) : value;
+			logger.info("Entered text '" + maskedValue + "' into " + getElementDescription(by));
+			ExtentManager.logStep("Entered text '" + maskedValue + "' into " + getElementDescription(by));
+		} catch (Exception e) {
+			logger.error("Unable to enter text into " + getElementDescription(by) + ": " , e);
+			ExtentManager.logStepFailure("Unable to enter text into " + getElementDescription(by) + ": " + e);
+			throw new RuntimeException("Unable to enter text into " + getElementDescription(by) + ": " + e.getMessage(), e); //ensure test fails when enter text action fails
+		}
+	}	
+
 	//Method to enter text into an input field
 	public void enterText(By by, String value) {
 		enterText(by, value, false); // Call the overloaded method with maskInLogs set to false by default
 	}
 
-	//Method to enter masked text into an input field
-	public void enterText(By by,String value,boolean maskInLogs) {
-    try {
-		waitForElementToBeVisible(by);
-		WebElement inputFieldElement = getDriver().findElement(by);
-		inputFieldElement.clear();
-		inputFieldElement.sendKeys(value);
-		String maskedValue = maskInLogs ? "*".repeat(value.length()) : value;
-		logger.info("Entered text '" + maskedValue + "' into " + getElementDescription(by));
-    } catch (Exception e) {
-		logger.error("Unable to enter the value: "+ e.getMessage());
-		throw e; // Rethrow the exception to ensure test fails when enter text action fails
-    }
-}	
-
 	//Method to get text from an element
 	public String getText(By by) {
 		try {
 			waitForElementToBeVisible(by);
-			return getDriver().findElement(by).getText();
+			String text = getDriver().findElement(by).getText();
+			logger.info("Retrieved text '" + text + "' from " + getElementDescription(by));
+			ExtentManager.logStep("Retrieved text '" + text + "' from " + getElementDescription(by));
+			return text;
 		} catch (Exception e) {
-			logger.error("Unable to get text: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when get text action fails
+			logger.error("Unable to get text from " + getElementDescription(by) + ": " , e);
+			ExtentManager.logStepFailure("Unable to get text from " + getElementDescription(by) + ": " + e);
+			throw new RuntimeException("Unable to get text from " + getElementDescription(by) + ": " + e.getMessage(), e); //ensure test fails when get text action fails
 		}
 	}
 
@@ -87,8 +92,9 @@ public class ActionDriver {
 			String actualText = getText(by);
 			return actualText.equals(expectedValue);
 		} catch (Exception e) {
-			logger.error("Unable to compare text: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when compare text action fails
+			logger.error("Unable to compare text: "+ e.getMessage(), e);
+			ExtentManager.logStepFailure("Unable to compare text: " + e);
+			throw new RuntimeException("Unable to compare text: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when compare text action fails
 		}
 	}
 
@@ -98,10 +104,12 @@ public class ActionDriver {
 			waitForElementToBeVisible(by);
 			boolean isDisplayed = getDriver().findElement(by).isDisplayed();
 			logger.info(getElementDescription(by) + (isDisplayed?" is Displayed":" is NOT displayed"));
+			ExtentManager.logStep(getElementDescription(by) + (isDisplayed?" is Displayed":" is NOT displayed"));
 			return isDisplayed;
 		} catch (Exception e) {
-			logger.error("Unable to check if element is displayed: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when check display action fails
+			logger.error("Unable to check if element is displayed: ", e);
+			ExtentManager.logStepFailure("Unable to check if element is displayed: " + e);	
+			throw new RuntimeException("Unable to check if element is displayed: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when check display action fails
 		}
 	}
 
@@ -110,9 +118,12 @@ public class ActionDriver {
 		try {
 			WebElement element = getDriver().findElement(by);
 			((JavascriptExecutor) getDriver()).executeScript("arguments[0].scrollIntoView(true);", element);
+			logger.info("Scrolled to " + getElementDescription(by));
+			ExtentManager.logStep("Scrolled to " + getElementDescription(by));
 		} catch (Exception e) {
-			logger.error("Unable to scroll to element: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when scroll action fails
+			logger.error("Unable to scroll to element: ", e);
+			ExtentManager.logStepFailure("Unable to scroll to element: " + e);
+			throw new RuntimeException("Unable to scroll to element: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when scroll action fails
 		}
 	}
 
@@ -121,9 +132,12 @@ public class ActionDriver {
 		try {
 			wait.until(webDriver -> "complete".equals(
 					((JavascriptExecutor) webDriver).executeScript("return document.readyState")));
+			logger.info("Page loaded completely");
+			ExtentManager.logStep("Page loaded completely");
 		} catch (Exception e) {
-			logger.error("Page did not load completely: " + e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when page load action fails
+			logger.error("Page did not load completely: " , e);
+			ExtentManager.logStepFailure("Page did not load completely: " + e);
+			throw new RuntimeException("Page did not load completely: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when page load action fails
 		}
 	}
 	
@@ -132,8 +146,9 @@ public class ActionDriver {
 		try {
 			wait.until(ExpectedConditions.elementToBeClickable(by));
 		} catch (Exception e) {
-			logger.error("Element is not clickable: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when wait for clickable action fails
+			logger.error("Exception occurred while waiting for element to be clickable: " + getElementDescription(by), e);
+			ExtentManager.logStepFailure("Exception occurred while waiting for element to be clickable: " + getElementDescription(by) + " | Error: " + e);
+			throw new RuntimeException("Exception occurred while waiting for element to be clickable: " + e.getMessage(), e);
 		}
 	}
 	
@@ -142,16 +157,18 @@ public class ActionDriver {
 		try {
 			wait.until(ExpectedConditions.visibilityOfElementLocated(by));
 		} catch (Exception e) {
-			logger.error("Element is not visible: "+ e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when wait for visible action fails
+			logger.error("Exception occurred while waiting for element to be visible: " + getElementDescription(by), e);
+			ExtentManager.logStepFailure("Exception occurred while waiting for element to be visible: " + getElementDescription(by) + " | Error: " + e);
+			throw new RuntimeException("Exception occurred while waiting for element to be visible: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when wait for visible action fails
 		}
 	}
 
 	public String getElementDescription(By by) {
 		if (by == null) {
 			IllegalArgumentException e = new IllegalArgumentException("Locator cannot be null");
-			logger.error("Locator cannot be null: " + e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when locator is null
+			logger.error("Locator cannot be null: " , e);
+			ExtentManager.logStepFailure("Locator cannot be null: " + e);
+			throw new RuntimeException("Locator cannot be null: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when locator is null
 		}
 
 		try {
@@ -182,11 +199,13 @@ public class ActionDriver {
 				return "Element with alt text: " + altText;
 
 		} catch (NoSuchElementException | StaleElementReferenceException e) {
-			logger.error("Unable to locate element for description: " + e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when element is not found for description
+			logger.error("Unable to locate element for description: " , e);
+			ExtentManager.logStepFailure("Unable to locate element for description: " + e);
+			throw new RuntimeException("Unable to locate element for description: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when element is not found for description
 		} catch (Exception e) {
-			logger.error("Error while getting element description: " + e.getMessage());
-			throw e; // Rethrow the exception to ensure test fails when any unexpected error occurs while getting element description
+			logger.error("Error while getting element description: " , e);
+			ExtentManager.logStepFailure("Error while getting element description: " + e);
+			throw new RuntimeException("Error while getting element description: " + e.getMessage(), e); // Rethrow the exception to ensure test fails when any unexpected error occurs while getting element description
 		}
 		return "Element located by: " + by.toString(); // Fallback to locator description if no attributes are available
 	}

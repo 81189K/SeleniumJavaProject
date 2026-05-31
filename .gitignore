@@ -24,10 +24,10 @@ logs/
 src/test/resources/*.exe
 
 # ExtentReports
-src/test/resources/ExtentReports/
+reports/
 
 # Screenshots
-src/test/resources/screenshots/
+reports/screenshots/
 
 # Test reports or temporary files
 test-output/
