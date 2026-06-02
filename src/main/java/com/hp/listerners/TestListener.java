@@ -9,13 +9,14 @@ import org.testng.ITestResult;
 import org.testng.annotations.ITestAnnotation;
 
 import com.aventstack.extentreports.Status;
+import com.hp.utilities.ConditionalRetry;
 import com.hp.utilities.ExtentManager;
 
 public class TestListener implements ITestListener, IAnnotationTransformer {
 
     @Override
 	public void transform(ITestAnnotation annotation, Class testClass, Constructor testConstructor, Method testMethod) {
-		annotation.setRetryAnalyzer(com.hp.utilities.ConditionalRetry.class); // Set the retry analyzer for all test methods to RetryAnalyzer
+		annotation.setRetryAnalyzer(ConditionalRetry.class); // Set the retry analyzer for all test methods to RetryAnalyzer
 	}
 
 	@Override
@@ -34,14 +35,20 @@ public class TestListener implements ITestListener, IAnnotationTransformer {
 	@Override
 	public void onTestSuccess(ITestResult result) { 
 		String testName = result.getMethod().getMethodName();
-        ExtentManager.logStepWithScreenshot(Status.PASS, "Test '" + testName + "' passed successfully");
+		if(!result.getTestClass().getName().toLowerCase().contains("api")) 
+        	ExtentManager.logStepWithScreenshot(Status.PASS, "Test '" + testName + "' passed successfully");
+		else
+			ExtentManager.logStep(Status.PASS, "Test '" + testName + "' passed successfully");
 	}
 
 	@Override
 	public void onTestFailure(ITestResult result) {
 		String testName = result.getMethod().getMethodName();
         String failureMessage = result.getThrowable() != null ? result.getThrowable().getMessage() : "No exception message available";
-        ExtentManager.logStepWithScreenshot(Status.FAIL, "'" + testName + "' " + failureMessage);
+        if(!result.getTestClass().getName().toLowerCase().contains("api")) 
+			ExtentManager.logStepWithScreenshot(Status.FAIL, "'" + testName + "' " + failureMessage);
+		else
+			ExtentManager.logStep(Status.FAIL, "'" + testName + "' " + failureMessage);
 	}
 
 	@Override

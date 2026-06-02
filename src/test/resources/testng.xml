@@ -10,6 +10,7 @@
 			<class name="com.hp.test.BaseClassTest2" />
 			<class name="com.hp.test.LoginPageTest" />
 			<class name="com.hp.test.HomePageTest" />
+			<class name="com.hp.test.ApiTest" />
 		</classes>
 	</test>
 </suite>
