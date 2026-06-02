@@ -70,7 +70,7 @@ public class LoginPageTest extends BaseClass {
         // Get the SoftAssert instance for the current thread
         SoftAssert softAssert = getSoftAssert();
 
-        String expectedUsernameText = "Username : Admin1";
+        String expectedUsernameText = "Username : Admin";
         softAssert.assertTrue(loginPage.get().verifyUsernameText(expectedUsernameText), "Test Failed: Username text mismatch");
 
         String expectedPasswordText = "Password : admin123";

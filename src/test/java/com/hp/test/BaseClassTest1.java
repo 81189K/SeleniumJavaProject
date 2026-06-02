@@ -11,9 +11,11 @@ public class BaseClassTest1 extends BaseClass{
 	@Test
 	public void verifyTitleTest() {
 		String title = getDriver().getTitle();
-		ExtentManager.logStep(Status.FAIL,"Intentionally failing as part of testing"); // Log the verification step to the current test in the report
-		assert title.equals("OrangeHRM11111") : "Test Failed - Title is not matching!!!";
-		// System.out.println("Test Passed - Title is matching");
+		// ExtentManager.logStep(Status.FAIL,"Intentionally failing as part of testing"); // Log the verification step to the current test in the report
+		// assert title.equals("OrangeHRM11111") : "Test Failed - Title is not matching!!!";
+		assert title.equals("OrangeHRM") : "Test Failed - Title is not matching!!!";
+		staticWait(1);
+		ExtentManager.logStep(Status.PASS,"Test Passed - Title is matching"); 
 	}
 	
 }

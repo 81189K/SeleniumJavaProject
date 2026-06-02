@@ -10,8 +10,11 @@ import java.util.concurrent.locks.LockSupport;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
@@ -37,7 +40,7 @@ public class BaseClass {
 	@BeforeSuite
 	public void loadConfig() throws IOException {
 		prop = new Properties();
-		FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
+		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/src/main/resources/config.properties");
 		prop.load(fis); //loads the file
 		logger.info("config.properties file loaded successfully");
 
@@ -64,16 +67,65 @@ public class BaseClass {
 	private void launchBrowser() {
 		String browser = prop.getProperty("browser");
 		if(browser.equalsIgnoreCase("chrome")) {
+			//ChromOptions
+			ChromeOptions options = new ChromeOptions();
+			options.addArguments("--headless=new"); // Run Chrome in headless mode
+			options.addArguments("--disable-gpu"); // Disable GPU for headless mode
+			options.addArguments("--window-size=1920,1080"); // Set window size
+
+			// ADD THESE TWO LINES TO OVERRIDE HIGH-DPI SCALING:
+			options.addArguments("--force-device-scale-factor=1");
+			options.addArguments("--high-dpi-support=1");
+
+			options.addArguments("--disable-notifications"); // Disable browser notifications
+			options.addArguments("--no-sandbox"); // Required for some CI environments like Jenkins
+			options.addArguments("--disable-dev-shm-usage"); // Resolve issues in resource-limited environments
+
 			// driver = new ChromeDriver();
-			driver.set(new ChromeDriver()); // Set the WebDriver instance for the current thread using ThreadLocal
+			driver.set(new ChromeDriver(options)); // Set the WebDriver instance for the current thread using ThreadLocal
 			ExtentManager.registerDriver(getDriver());
 			logger.info("ChromeDriver initialized");
 		} else if(browser.equalsIgnoreCase("firefox")) {
+			//FirefoxOptions
+			FirefoxOptions options = new FirefoxOptions();
+
+			// 1. Native Firefox Headless mode
+			options.addArguments("-headless"); 
+
+			// 2. Set the native window size at boot (Firefox uses a single string flag)
+			options.addArguments("--window-size=1920,1080"); 
+
+			// 3. FIX HIGH-DPI/DEVICE SCALING IN FIREFOX:
+			// This is the direct equivalent of --force-device-scale-factor=1
+			options.addPreference("layout.css.devPixelsPerPx", "1.0");
+
+			// 4. Disable notifications and web push alerts
+			options.addPreference("dom.webnotifications.enabled", false);
+			options.addPreference("dom.push.enabled", false);
+
+			// 5. Performance tuners for resource-limited CI/CD environments
+			options.addPreference("browser.tabs.remote.autostart", true);
+			options.addPreference("layers.acceleration.disabled", true); // Replaces --disable-gpu
+
+			// Instantiate the Firefox driver with your tailored options & set to current thread
 			// driver = new FirefoxDriver();
-			driver.set(new FirefoxDriver());
+			driver.set(new FirefoxDriver(options));
 			ExtentManager.registerDriver(getDriver());
 			logger.info("FirefoxDriver initialized");
 		} else if(browser.equalsIgnoreCase("edge")) {
+			EdgeOptions options = new EdgeOptions();
+			options.addArguments("--headless"); // Run Edge in headless mode
+			options.addArguments("--disable-gpu"); // Disable GPU acceleration
+			options.addArguments("--window-size=1920,1080"); // Set window size
+			
+			// ADD THESE TWO LINES TO OVERRIDE HIGH-DPI SCALING:
+			options.addArguments("--force-device-scale-factor=1");
+			options.addArguments("--high-dpi-support=1");
+			
+			options.addArguments("--disable-notifications"); // Disable pop-up notifications
+			options.addArguments("--no-sandbox"); // Needed for CI/CD
+			options.addArguments("--disable-dev-shm-usage"); // Prevent resource-limited crashes
+
 			// driver = new EdgeDriver();
 			driver.set(new EdgeDriver()); 
 			ExtentManager.registerDriver(getDriver());
@@ -95,7 +147,9 @@ public class BaseClass {
 		getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
 		
 		//Maximize the driver
-		getDriver().manage().window().maximize();
+//		getDriver().manage().window().maximize();
+		// Force sync the layout dimensions post-boot
+		getDriver().manage().window().setSize(new org.openqa.selenium.Dimension(1920, 1080));
 		
 		//Navigate to URL
 		String URL = prop.getProperty("url");

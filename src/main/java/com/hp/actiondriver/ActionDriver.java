@@ -3,6 +3,9 @@ package com.hp.actiondriver;
 import static com.hp.base.BaseClass.getDriver;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -10,7 +13,9 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.hp.base.BaseClass;
@@ -280,6 +285,293 @@ public class ActionDriver {
 							originalStyle);
 		} catch (Exception e) {
 			logger.warn("Unable to remove border for {}", getElementDescription(by), e);
+		}
+	}
+
+	// ===================== Select Methods =====================
+
+	// Method to select a dropdown by visible text
+	public void selectByVisibleText(By by, String value) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			new Select(element).selectByVisibleText(value);
+			applyBorder(by, "green");
+			logger.info("Selected dropdown value: " + value);
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to select dropdown value: " + value, e);
+		}
+	}
+
+	// Method to select a dropdown by value
+	public void selectByValue(By by, String value) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			new Select(element).selectByValue(value);
+			applyBorder(by, "green");
+			logger.info("Selected dropdown value by actual value: " + value);
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to select dropdown by value: " + value, e);
+		}
+	}
+
+	// Method to select a dropdown by index
+	public void selectByIndex(By by, int index) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			new Select(element).selectByIndex(index);
+			applyBorder(by, "green");
+			logger.info("Selected dropdown value by index: " + index);
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to select dropdown by index: " + index, e);
+		}
+	}
+
+	// Method to get all options from a dropdown
+	public List<String> getDropdownOptions(By by) {
+		List<String> optionsList = new ArrayList<>();
+		try {
+			WebElement dropdownElement = getDriver().findElement(by);
+			Select select = new Select(dropdownElement);
+			for (WebElement option : select.getOptions()) {
+				optionsList.add(option.getText());
+			}
+			applyBorder(by, "green");
+			logger.info("Retrieved dropdown options for " + getElementDescription(by));
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to get dropdown options: " + e.getMessage());
+		}
+		return optionsList;
+	}
+
+	// ===================== JavaScript Utility Methods =====================
+
+	// Method to click using JavaScript
+	public void clickUsingJS(By by) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			((JavascriptExecutor) getDriver()).executeScript("arguments[0].click();", element);
+			applyBorder(by, "green");
+			logger.info("Clicked element using JavaScript: " + getElementDescription(by));
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to click using JavaScript", e);
+		}
+	}
+
+	// Method to scroll to the bottom of the page
+	public void scrollToBottom() {
+		((JavascriptExecutor) getDriver()).executeScript("window.scrollTo(0, document.body.scrollHeight);");
+		logger.info("Scrolled to the bottom of the page.");
+	}
+
+	// Method to highlight an element using JavaScript
+	public void highlightElementJS(By by) {
+		try {
+			WebElement element = getDriver().findElement(by);
+			((JavascriptExecutor) getDriver()).executeScript("arguments[0].style.border='3px solid yellow'", element);
+			logger.info("Highlighted element using JavaScript: " + getElementDescription(by));
+		} catch (Exception e) {
+			logger.error("Unable to highlight element using JavaScript", e);
+		}
+	}
+
+	// ===================== Window and Frame Handling =====================
+
+	// Method to switch between browser windows
+	public void switchToWindow(String windowTitle) {
+		try {
+			Set<String> windows = getDriver().getWindowHandles();
+			for (String window : windows) {
+				getDriver().switchTo().window(window);
+				if (getDriver().getTitle().equals(windowTitle)) {
+					logger.info("Switched to window: " + windowTitle);
+					return;
+				}
+			}
+			logger.warn("Window with title " + windowTitle + " not found.");
+		} catch (Exception e) {
+			logger.error("Unable to switch window", e);
+		}
+	}
+
+	// Method to switch to an iframe
+	public void switchToFrame(By by) {
+		try {
+			getDriver().switchTo().frame(getDriver().findElement(by));
+			logger.info("Switched to iframe: " + getElementDescription(by));
+		} catch (Exception e) {
+			logger.error("Unable to switch to iframe", e);
+		}
+	}
+
+	// Method to switch back to the default content
+	public void switchToDefaultContent() {
+		getDriver().switchTo().defaultContent();
+		logger.info("Switched back to default content.");
+	}
+
+	// ===================== Alert Handling =====================
+
+	// Method to accept an alert popup
+	public void acceptAlert() {
+		try {
+			getDriver().switchTo().alert().accept();
+			logger.info("Alert accepted.");
+		} catch (Exception e) {
+			logger.error("No alert found to accept", e);
+		}
+	}
+
+	// Method to dismiss an alert popup
+	public void dismissAlert() {
+		try {
+			getDriver().switchTo().alert().dismiss();
+			logger.info("Alert dismissed.");
+		} catch (Exception e) {
+			logger.error("No alert found to dismiss", e);
+		}
+	}
+
+	// Method to get alert text
+	public String getAlertText() {
+		try {
+			return getDriver().switchTo().alert().getText();
+		} catch (Exception e) {
+			logger.error("No alert text found", e);
+			return "";
+		}
+	}
+
+	// ===================== Browser Actions =====================
+
+	public void refreshPage() {
+		try {
+			getDriver().navigate().refresh();
+			ExtentManager.logStep("Page refreshed successfully.");
+			logger.info("Page refreshed successfully.");
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to refresh page");
+			logger.error("Unable to refresh page: " + e.getMessage());
+		}
+	}
+
+	public String getCurrentURL() {
+		try {
+			String url = getDriver().getCurrentUrl();
+			ExtentManager.logStep("Current URL fetched: " + url);
+			logger.info("Current URL fetched: " + url);
+			return url;
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to fetch current URL" + ": " + "get_current_url_failed");
+			logger.error("Unable to fetch current URL: " + e.getMessage());
+			return null;
+		}
+	}
+
+	public void maximizeWindow() {
+		try {
+			getDriver().manage().window().maximize();
+			ExtentManager.logStep("Browser window maximized.");
+			logger.info("Browser window maximized.");
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to maximize window"+ ": " + "maximize_window_failed");
+			logger.error("Unable to maximize window: " + e.getMessage());
+		}
+	}
+
+	// ===================== Advanced WebElement Actions =====================
+
+	public void moveToElement(By by) {
+		String elementDescription = getElementDescription(by);
+		try {
+			Actions actions = new Actions(getDriver());
+			actions.moveToElement(getDriver().findElement(by)).perform();
+			ExtentManager.logStep("Moved to element: " + elementDescription);
+			logger.info("Moved to element --> " + elementDescription);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to move to " + elementDescription + ": move_failed");
+			logger.error("Unable to move to element: " + e.getMessage());
+		}
+	}
+
+	public void dragAndDrop(By source, By target) {
+		String sourceDescription = getElementDescription(source);
+		String targetDescription = getElementDescription(target);
+		try {
+			Actions actions = new Actions(getDriver());
+			actions.dragAndDrop(getDriver().findElement(source), getDriver().findElement(target)).perform();
+			ExtentManager.logStep("Dragged element: " + sourceDescription + " and dropped on " + targetDescription);
+			logger.info("Dragged element: " + sourceDescription + " and dropped on " + targetDescription);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to drag and drop from " + sourceDescription + " to " + targetDescription + ": " + "drag_and_drop_failed");
+			logger.error("Unable to drag and drop: " + e.getMessage());
+		}
+	}
+
+	public void doubleClick(By by) {
+		String elementDescription = getElementDescription(by);
+		try {
+			Actions actions = new Actions(getDriver());
+			actions.doubleClick(getDriver().findElement(by)).perform();
+			ExtentManager.logStep("Double-clicked on element: " + elementDescription);
+			logger.info("Double-clicked on element --> " + elementDescription);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to double-click element" + elementDescription + ": doubleclick_failed");
+			logger.error("Unable to double-click element: " + e.getMessage());
+		}
+	}
+
+	public void rightClick(By by) {
+		String elementDescription = getElementDescription(by);
+		try {
+			Actions actions = new Actions(getDriver());
+			actions.contextClick(getDriver().findElement(by)).perform();
+			ExtentManager.logStep("Right-clicked on element: " + elementDescription);
+			logger.info("Right-clicked on element --> " + elementDescription);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to right-click element" + elementDescription + ": rightclick_failed");
+			logger.error("Unable to right-click element: " + e.getMessage());
+		}
+	}
+
+	public void sendKeysWithActions(By by, String value) {
+		String elementDescription = getElementDescription(by);
+		try {
+			Actions actions = new Actions(getDriver());
+			actions.sendKeys(getDriver().findElement(by), value).perform();
+			ExtentManager.logStep("Sent keys to element: " + elementDescription + " | Value: " + value);
+			logger.info("Sent keys to element --> " + elementDescription + " | Value: " + value);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to send keys to " + elementDescription + ": sendkeys_failed");
+			logger.error("Unable to send keys to element: " + e.getMessage());
+		}
+	}
+
+	public void clearText(By by) {
+		String elementDescription = getElementDescription(by);
+		try {
+			getDriver().findElement(by).clear();
+			ExtentManager.logStep("Cleared text in element: " + elementDescription);
+			logger.info("Cleared text in element --> " + elementDescription);
+		} catch (Exception e) {
+			ExtentManager.logStepFailure("Unable to clear text in " + elementDescription + ": clear_failed");
+			logger.error("Unable to clear text in element: " + e.getMessage());
+		}
+	}
+
+	// Method to upload a file
+	public void uploadFile(By by, String filePath) {
+		try {
+			getDriver().findElement(by).sendKeys(filePath);
+			applyBorder(by, "green");
+			logger.info("Uploaded file: " + filePath);
+		} catch (Exception e) {
+			applyBorder(by, "red");
+			logger.error("Unable to upload file: " + e.getMessage());
 		}
 	}
 
